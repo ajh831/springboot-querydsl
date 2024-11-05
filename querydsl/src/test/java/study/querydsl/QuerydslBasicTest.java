@@ -27,6 +27,8 @@ public class QuerydslBasicTest {
 
     @BeforeEach
     public void before() {
+        queryFactory = new JPAQueryFactory(em);
+
         Team teamA = new Team("teamA");
         Team teamB = new Team("teamB");
         em.persist(teamA);
@@ -74,12 +76,51 @@ public class QuerydslBasicTest {
 
     @Test
     public void testQType(){
-        queryFactory = new JPAQueryFactory(em);
-
         Member findMember = queryFactory
                 .select(member)
                 .from(member)
                 .where(member.username.eq("member1")) // 파라미터 바인딩 처리
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchEQ(){
+        queryFactory = new JPAQueryFactory(em);
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.eq(10)))
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchBetween(){
+        queryFactory = new JPAQueryFactory(em);
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(member.username.eq("member1")
+                        .and(member.age.between(10, 30)))
+                .fetchOne();
+
+        assertThat(findMember.getUsername()).isEqualTo("member1");
+    }
+
+    @Test
+    public void searchAndParam(){
+        queryFactory = new JPAQueryFactory(em);
+
+        Member findMember = queryFactory
+                .selectFrom(member)
+                .where(
+                        member.username.eq("member1"),
+                        member.age.eq(10)
+                )
                 .fetchOne();
 
         assertThat(findMember.getUsername()).isEqualTo("member1");
